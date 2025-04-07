@@ -1,0 +1,11 @@
+data_size_gb,job_type,executorMemoryMB,executorCores,driverMemoryMB,driverCores,numPartitions,executionTimeSec
+50,join,8192,4,4096,2,200,120.5
+20,filter,6144,3,3072,1,100,45.2
+100,agg,16384,6,8192,2,400,210.7
+10,join,4096,2,2048,1,50, 30
+30,filter,8192,4,4096,2,150,68.3
+75,agg,12288,5,6144,2,300,180.1
+5,filter,4096,2,2048,1,30,25.7
+200,join,32768,8,8192,4,800,350.9
+150,agg,24576,7,7168,3,600,290.4
+40,filter,6144,3,3072,1,120,55.6
