@@ -16,7 +16,7 @@ def main():
 
     # 3. 构造特征矩阵 X 和目标 y
     feature_cols = [
-        'data_size_gb', 'job_type_enc',
+        'data_size_mb', 'job_type_enc',
         'executorMemoryMB', 'executorCores',
         'driverMemoryMB', 'driverCores',
         'numPartitions'
