@@ -29,7 +29,7 @@ def main():
         X, y, test_size=0.2, random_state=42
     )
 
-    # 5. 建立模型并做网格搜索
+    # 5. 建立模型并做网格搜索，定义搜索范围
     param_grid = {
         'n_estimators': [50, 100],
         'max_depth': [10, 20, None],
@@ -39,16 +39,19 @@ def main():
     grid = GridSearchCV(
         rf, param_grid,
         cv=3,
-        scoring='neg_mean_squared_error',
+        scoring='neg_mean_squared_error', # 负的均方误差
         n_jobs=-1,
         verbose=1
     )
+    # 遍历不同超参数组合，训练多个模型并选择最佳模型（训练过程）
     grid.fit(X_train, y_train)
 
-    # 6. 评估模型
+    # 6. 获得最佳模型
     best_rf = grid.best_estimator_
     y_pred = best_rf.predict(X_test)
+    # 计算均方根误差
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    # 最佳超参数组合
     print(f'Best params: {grid.best_params_}')
     print(f'Test RMSE: {rmse:.2f} seconds')
 
