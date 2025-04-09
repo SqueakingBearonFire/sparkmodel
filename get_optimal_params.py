@@ -1,4 +1,8 @@
+import os
+
+import joblib
 import numpy as np
+import pandas as pd
 
 from objective import objective_ml
 
@@ -81,6 +85,35 @@ def predict_initial_params(data_size_mb, job_type):  # 参数改为 data_size_mb
     return [executor_memory, executor_cores, driver_memory, driver_cores, num_partitions]
 
 
+def update_model(features, pred_time, feature_names, model_path='rf_spark_exec_time.pkl'):
+    """
+    用于增量更新模型的函数。每次调用时都将新的数据添加到训练数据中，并更新模型。
+    """
+    # 加载模型
+    rf_model = joblib.load(model_path)
+    # 将新数据追加到 CSV 文件
+    new_data = [features[0], features[1]] + features[2:] + [pred_time]
+    new_data_df = pd.DataFrame([new_data], columns=feature_names + ['executionTimeSec'])
+
+    if os.path.exists('train_data.csv'):
+        new_data_df.to_csv('train_data.csv', mode='a', header=False, index=False)
+    else:
+        new_data_df.to_csv('train_data.csv', mode='w', header=True, index=False)
+
+    # 每当收集到 100 条数据时进行增量训练
+    train_data = pd.read_csv('train_data.csv')
+    if len(train_data) >= 100:
+        X_train = train_data[feature_names].values
+        y_train = train_data['executionTimeSec'].values
+
+        # 使用随机森林的 fit() 方法进行全量训练，这里可以替换成增量学习方法（如在线学习模型）
+        rf_model.fit(X_train, y_train)  # 注意，fit()方法是全量训练的
+
+        # 保存更新后的模型
+        joblib.dump(rf_model, model_path)
+
+        # 清空 CSV 文件中的数据（如果需要清理训练数据）
+        os.remove('train_data.csv')
 
 if __name__=='__main__':
     import argparse
@@ -114,9 +147,15 @@ if __name__=='__main__':
       int(round(best_params[4]))
     ]
 
+    best_params_with_metadata = [args.data_size_mb, args.job_type] + best
+
     # 4. 输出可直接用于 spark-submit
     print(f"--executor-memory {best[0]}m "
           f"--executor-cores {best[1]} "
           f"--driver-memory {best[2]}m "
           f"--driver-cores {best[3]} "
           f"--conf spark.sql.shuffle.partitions={best[4]}")
+
+    feature_names = ['data_size_mb', 'job_type_enc', 'executorMemoryMB', 'executorCores', 'driverMemoryMB',
+                     'driverCores', 'numPartitions']
+    update_model(best_params_with_metadata, best_val, feature_names)
