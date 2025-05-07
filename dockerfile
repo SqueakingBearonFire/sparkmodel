@@ -20,6 +20,10 @@ RUN python3 -m venv /venv
 # Add the virtual environment to the PATH
 ENV PATH="/venv/bin:$PATH"
 
+COPY ./requirements.txt ./
+
+RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
+
 WORKDIR /code
 
 COPY . .
